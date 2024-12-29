@@ -1,5 +1,5 @@
 import unittest
-from htmlnode import HTMLNode, LeafNode
+from htmlnode import HTMLNode, LeafNode, ParentNode
 
 
 class TestHTMLNode(unittest.TestCase):
@@ -65,5 +65,32 @@ class TestHTMLNode(unittest.TestCase):
     with self.assertRaises(ValueError):
         leaf_node = LeafNode("p", None)
         leaf_node.to_html()
+
+  def test_parent_no_tag(self):
+    with self.assertRaises(ValueError):
+      parent_node = ParentNode(None, [LeafNode("p", "Small paragraph")])
+      parent_node.to_html()
+  
+  def test_single_child(self):
+    parent_node = ParentNode("div", [LeafNode("p", "Small paragraph")])
+    self.assertEqual(parent_node.to_html(), "<div><p>Small paragraph</p></div>")
+
+  def test_no_child(self):
+    with self.assertRaises(ValueError):
+      parent_node = ParentNode("div", None, None)
+      parent_node.to_html()
+  
+  def test_multi_child(self):
+    parent_node = ParentNode("div", [LeafNode("p", "Small paragraph"), LeafNode("p", "Another paragraph")])
+    self.assertEqual(parent_node.to_html(), "<div><p>Small paragraph</p><p>Another paragraph</p></div>")
+  
+  def test_nested_parent(self):
+    parent_node = ParentNode("div", [ParentNode("span", [LeafNode("p", "Small paragraph")]), LeafNode("a", "Link", {"href": "https://www.boot.dev"})])
+    self.assertEqual(parent_node.to_html(), '<div><span><p>Small paragraph</p></span><a href="https://www.boot.dev">Link</a></div>')
+
+  def test_parent_props(self):
+    parent_node = ParentNode("div", [LeafNode("p", "Small paragraph")], {"class": "main"})
+    self.assertEqual(parent_node.to_html(), '<div class="main"><p>Small paragraph</p></div>')
+
 if __name__ == "__main__":
     unittest.main()
