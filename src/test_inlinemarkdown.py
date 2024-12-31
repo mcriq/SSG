@@ -1,9 +1,9 @@
 import unittest
 from textnode import TextNode, TextType
-from inline_markdown import split_nodes_delimiter
+from inline_markdown import split_nodes_delimiter, extract_markdown_images, extract_markdown_links
 
 
-class TestSplitNodesDelimiter(unittest.TestCase):
+class TestInlineMarkdown(unittest.TestCase):
   def test_split_nodes_no_delim(self):
     node = TextNode("Just plain text", TextType.TEXT)
     nodes = split_nodes_delimiter([node], "`", TextType.CODE)
@@ -61,6 +61,38 @@ class TestSplitNodesDelimiter(unittest.TestCase):
     with self.assertRaises(Exception):
       node = TextNode("String with *bad markdown.", TextType.TEXT)
       split_nodes_delimiter([node], "*", TextType.ITALIC)
+
+  def test_img_extraction(self):
+      text = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
+      image_list = extract_markdown_images(text)
+      self.assertListEqual(
+        [
+            ("rick roll", "https://i.imgur.com/aKaOqIh.gif"), 
+            ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg"),
+        ],
+        image_list
+      )
+  
+  def test_link_extraction(self):
+    text = "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)"
+    link_list = extract_markdown_links(text)
+    self.assertListEqual(
+        [
+          ("to boot dev", "https://www.boot.dev"), 
+          ("to youtube", "https://www.youtube.com/@bootdotdev"),
+        ],
+        link_list
+    )
+
+  def test_link_extraction_empty_text(self):
+      text = ""
+      link_list = extract_markdown_links(text)
+      self.assertListEqual([], link_list)
+
+  def test_image_extraction_empty_text(self):
+      text = ""
+      img_list = extract_markdown_images(text)
+      self.assertListEqual([], img_list)
 
 if __name__ == "__main__":
     unittest.main()
