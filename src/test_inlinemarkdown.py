@@ -1,6 +1,6 @@
 import unittest
 from textnode import TextNode, TextType
-from inline_markdown import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link
+from inline_markdown import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes
 
 
 class TestInlineMarkdown(unittest.TestCase):
@@ -153,5 +153,41 @@ class TestInlineMarkdown(unittest.TestCase):
         ],
         new_nodes,
     )
+
+  def test_text_to_textnodes_all_types(self):
+    text = "This is **text** with an *italic* word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+    nodes = text_to_textnodes(text)
+    output = [
+      TextNode("This is ", TextType.TEXT),
+      TextNode("text", TextType.BOLD),
+      TextNode(" with an ", TextType.TEXT),
+      TextNode("italic", TextType.ITALIC),
+      TextNode(" word and a ", TextType.TEXT),
+      TextNode("code block", TextType.CODE),
+      TextNode(" and an ", TextType.TEXT),
+      TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+      TextNode(" and a ", TextType.TEXT),
+      TextNode("link", TextType.LINK, "https://boot.dev"),
+    ]
+    self.assertListEqual(nodes, output)
+
+  def test_text_to_textnodes_blank(self):
+    text = ""
+    nodes = text_to_textnodes(text)
+    self.assertListEqual(nodes, [])
+
+  def test_text_to_textnodes_nested(self):
+     text = "This is **bold text with *italics* inside of it**"
+     nodes = text_to_textnodes(text)
+     output = [
+      TextNode("This is ", TextType.TEXT),
+      TextNode("bold text with *italics* inside of it", TextType.BOLD)
+     ]
+     self.assertListEqual(nodes, output)
+
+  def test_text_to_textnodes_malformed(self):
+    with self.assertRaises(Exception):
+      text = "This **bold text is malformed"
+      text_to_textnodes(text)
 if __name__ == "__main__":
     unittest.main()
